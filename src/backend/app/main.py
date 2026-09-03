@@ -1,10 +1,13 @@
 from fastapi import FastAPI
+from .api.main import api_router
+from .api.core.config import settings
 
 app = FastAPI(
-    title="Modern Fraud Detection - FastAPI",
-    description="A modern fraud detection system built with FastAPI.",
+    title=settings.PROJECT_NAME,
+    description=settings.PROJECT_DESCRIPTION,
+    docs_url=f"{settings.API_V1_STR}/docs",
+    redoc_url=f"{settings.API_V1_STR}/redoc",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
-@app.get("/")
-def home():
-    return {"message": "Welcome to the Modern Fraud Detection API!"}
+app.include_router(api_router, prefix=settings.API_V1_STR)
