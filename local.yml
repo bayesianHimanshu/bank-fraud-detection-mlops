@@ -1,0 +1,21 @@
+services:
+  postgres:
+    container_name: postgres
+    build:
+      context: ./docker/local/postgres/
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:5432:5432"
+    env_file:
+      - ./.envs/.env.local
+    volumes:
+      - modern_bank_fraud_detection_postgres_data:/var/lib/postgresql/data
+    networks:
+      - modern_bank_fraud_detection_network
+
+volumes:
+  modern_bank_fraud_detection_postgres_data:
+
+networks:
+  modern_bank_fraud_detection_network:
+    external: true
