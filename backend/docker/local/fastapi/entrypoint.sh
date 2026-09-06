@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+python << END
+import sys
+import time
+import psycopg
+
+MAX_WAIT_SECONDS = 30
+RETRY_INTERVAL = 5
+start_time = time.time()
+
+def check_database():
+    try:
+        conn = psycopg.connect(
+            host="postgres",
+            port=5432,
+            dbname="${POSTGRES_DB}",
+            user="${POSTGRES_USER}",
+            password="${POSTGRES_PASSWORD}"
+        )
+        conn.close()
+        return True
+    except psycopg.OperationalError as error:
+        elapsed = int(time.time() - start_time)
+        sys.stderr.write(f"Database connection attempt failed after {elapsed} seconds. Error: {error}\n")
+        return False
+
+while True:
+    if check_database():
+        break
+
+    if time.time() - start_time > MAX_WAIT_SECONDS:
+        sys.stderr.write("Error: Could not connect to the database after 30 seconds.\n")
+        sys.exit(1)
+
+    sys.stderr.write(f"Waiting for the database to be ready... Retrying in {RETRY_INTERVAL} seconds.\n")
+    time.sleep(RETRY_INTERVAL)
+END
+
+>&2 echo 'PostgreSQL is ready to accept connections'
+
+exec "$@"
